@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { statsAPI } from '../api'
+import { statsAPI, careAPI } from '../api'
 import {
   StatsOverview,
   EmotionTrendItem,
   StressDistributionItem,
   SupportCountData,
+  CareStats,
 } from '../types'
 import {
   LineChart,
@@ -45,12 +46,21 @@ const SUPPORT_COLORS = [
   '#fb923c',
 ]
 
+const CARE_COLORS = [
+  '#a78bfa',
+  '#f472b6',
+  '#4ade80',
+  '#ef4444',
+  '#60a5fa',
+]
+
 function Statistics() {
   const [overview, setOverview] = useState<StatsOverview | null>(null)
   const [emotionTrend, setEmotionTrend] = useState<EmotionTrendItem[]>([])
   const [stressDistribution, setStressDistribution] = useState<StressDistributionItem[]>([])
   const [supportCount, setSupportCount] = useState<SupportCountData | null>(null)
   const [recoveryCurve, setRecoveryCurve] = useState<any[]>([])
+  const [careStats, setCareStats] = useState<CareStats | null>(null)
   const [period, setPeriod] = useState<'week' | 'month'>('week')
 
   useEffect(() => {
@@ -59,12 +69,13 @@ function Statistics() {
 
   const loadData = async () => {
     try {
-      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes] = await Promise.all([
+      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes] = await Promise.all([
         statsAPI.getOverview(1, period),
         statsAPI.getEmotionTrend(1, period),
         statsAPI.getStressDistribution(1, period),
         statsAPI.getSupportCount(1, period),
         statsAPI.getRecoveryCurve(1, period === 'week' ? 'month' : 'month'),
+        careAPI.getStats(1, 7),
       ])
 
       if (overviewRes.data.success) setOverview(overviewRes.data.data)
@@ -72,6 +83,7 @@ function Statistics() {
       if (stressRes.data.success) setStressDistribution(stressRes.data.data)
       if (supportRes.data.success) setSupportCount(supportRes.data.data)
       if (recoveryRes.data.success) setRecoveryCurve(recoveryRes.data.data)
+      if (careRes.data.success) setCareStats(careRes.data.data)
     } catch (e) {
       console.error('加载统计数据失败', e)
     }
@@ -341,6 +353,126 @@ function Statistics() {
             恢复本来就是一个曲折的过程。坚持记录，你会看到变化的 💕
           </p>
         </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">💜 关怀计划完成率</h2>
+        {careStats && careStats.total > 0 ? (
+          <div>
+            <div style={{ marginBottom: '16px', display: 'flex', gap: '16px' }}>
+              <div style={{ textAlign: 'center', flex: 1, padding: '16px', background: '#faf5ff', borderRadius: '12px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 600, color: '#a78bfa' }}>
+                  {careStats.completion_rate}%
+                </div>
+                <div style={{ fontSize: '13px', color: '#666' }}>近7天完成率</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1, padding: '16px', background: '#f0fdf4', borderRadius: '12px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 600, color: '#22c55e' }}>
+                  {careStats.completed}/{careStats.total}
+                </div>
+                <div style={{ fontSize: '13px', color: '#666' }}>已完成/总数</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1, padding: '16px', background: '#fef3c7', borderRadius: '12px' }}>
+                <div style={{ fontSize: '28px', fontWeight: 600, color: '#f59e0b' }}>
+                  {careStats.pending}
+                </div>
+                <div style={{ fontSize: '13px', color: '#666' }}>待完成</div>
+              </div>
+            </div>
+            <div className="chart-container" style={{ height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={careStats.daily_rates.map(d => ({
+                    date: formatDate(d.date),
+                    完成率: d.rate,
+                    建议数: d.total,
+                    已完成: d.completed,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                  <Tooltip formatter={(value: number, name: string) => name === '完成率' ? `${value}%` : value} />
+                  <Legend />
+                  <Bar dataKey="完成率" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">💜</div>
+            <p>暂无关怀计划数据，去关怀计划页面查看今日建议吧~</p>
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">📋 建议类型分布</h2>
+        {careStats && careStats.category_distribution.length > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ width: '50%', height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={careStats.category_distribution.map(c => ({
+                      name: c.category_label,
+                      value: c.count,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {careStats.category_distribution.map((_, index) => (
+                      <Cell key={`care-cell-${index}`} fill={CARE_COLORS[index % CARE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ flex: 1 }}>
+              {careStats.category_distribution.map((c, index) => (
+                <div
+                  key={c.category}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 0',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '3px',
+                        background: CARE_COLORS[index % CARE_COLORS.length],
+                      }}
+                    />
+                    <span style={{ fontSize: '13px' }}>{c.category_label}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 500 }}>{c.count}条</div>
+                    <div style={{ fontSize: '11px', color: '#999' }}>
+                      完成{c.completed}条 · {c.percentage}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📋</div>
+            <p>暂无建议类型数据</p>
+          </div>
+        )}
       </div>
     </div>
   )

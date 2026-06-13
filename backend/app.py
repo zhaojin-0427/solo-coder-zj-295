@@ -21,6 +21,7 @@ def create_app():
     from routes.stats_routes import stats_bp
     from routes.resource_routes import resource_bp
     from routes.user_routes import user_bp
+    from routes.care_routes import care_bp
 
     app.register_blueprint(emotion_bp, url_prefix='/api/emotion')
     app.register_blueprint(stress_bp, url_prefix='/api/stress')
@@ -29,6 +30,7 @@ def create_app():
     app.register_blueprint(stats_bp, url_prefix='/api/stats')
     app.register_blueprint(resource_bp, url_prefix='/api/resources')
     app.register_blueprint(user_bp, url_prefix='/api/user')
+    app.register_blueprint(care_bp, url_prefix='/api/care')
 
     with app.app_context():
         db.create_all()

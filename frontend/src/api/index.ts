@@ -98,4 +98,15 @@ export const userAPI = {
     api.get(`/user/current?role=${role}`)
 }
 
+export const careAPI = {
+  getToday: (userId: number = 1) =>
+    api.get(`/care/today?user_id=${userId}`),
+  markSuggestion: (suggestionId: number, status: 'completed' | 'skipped' | 'pending') =>
+    api.post('/care/mark', { suggestion_id: suggestionId, status }),
+  getStats: (userId: number = 1, days: number = 7) =>
+    api.get(`/care/stats?user_id=${userId}&days=${days}`),
+  getHistory: (userId: number = 1, days: number = 7) =>
+    api.get(`/care/history?user_id=${userId}&days=${days}`),
+}
+
 export default api

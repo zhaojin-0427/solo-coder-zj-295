@@ -98,3 +98,23 @@ export interface CorrelationItem {
   baby_feed_count: number | null
   baby_crying_duration: number | null
 }
+
+export interface CareSuggestion {
+  id: number
+  suggestion_date: string
+  category: string
+  category_label: string
+  content: string
+  status: 'pending' | 'completed' | 'skipped'
+  priority: 'normal' | 'urgent'
+}
+
+export interface CareStats {
+  total: number
+  completed: number
+  skipped: number
+  pending: number
+  completion_rate: number
+  daily_rates: { date: string; total: number; completed: number; rate: number }[]
+  category_distribution: { category: string; category_label: string; count: number; completed: number; percentage: number }[]
+}

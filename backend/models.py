@@ -102,3 +102,16 @@ class LowMoodAlert(db.Model):
     resources_pushed = db.Column(db.Text, default='')
     is_acknowledged = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class CareSuggestion(db.Model):
+    __tablename__ = 'care_suggestions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    suggestion_date = db.Column(db.Date, default=date.today, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    priority = db.Column(db.String(20), default='normal')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
