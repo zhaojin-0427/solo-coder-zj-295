@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { statsAPI, careAPI } from '../api'
+import { statsAPI, careAPI, careMedAPI } from '../api'
 import {
   StatsOverview,
   EmotionTrendItem,
   StressDistributionItem,
   SupportCountData,
   CareStats,
+  CareMedStats,
 } from '../types'
 import {
   LineChart,
@@ -54,6 +55,13 @@ const CARE_COLORS = [
   '#60a5fa',
 ]
 
+const tooltipStyle = {
+  backgroundColor: '#1e1e1e',
+  border: '1px solid #333',
+  borderRadius: '8px',
+  color: '#f5f5f5',
+}
+
 function Statistics() {
   const [overview, setOverview] = useState<StatsOverview | null>(null)
   const [emotionTrend, setEmotionTrend] = useState<EmotionTrendItem[]>([])
@@ -61,6 +69,7 @@ function Statistics() {
   const [supportCount, setSupportCount] = useState<SupportCountData | null>(null)
   const [recoveryCurve, setRecoveryCurve] = useState<any[]>([])
   const [careStats, setCareStats] = useState<CareStats | null>(null)
+  const [careMedStats, setCareMedStats] = useState<CareMedStats | null>(null)
   const [period, setPeriod] = useState<'week' | 'month'>('week')
 
   useEffect(() => {
@@ -69,13 +78,14 @@ function Statistics() {
 
   const loadData = async () => {
     try {
-      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes] = await Promise.all([
+      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes, careMedRes] = await Promise.all([
         statsAPI.getOverview(1, period),
         statsAPI.getEmotionTrend(1, period),
         statsAPI.getStressDistribution(1, period),
         statsAPI.getSupportCount(1, period),
         statsAPI.getRecoveryCurve(1, period === 'week' ? 'month' : 'month'),
         careAPI.getStats(1, 7),
+        careMedAPI.getStats(1, 30),
       ])
 
       if (overviewRes.data.success) setOverview(overviewRes.data.data)
@@ -84,6 +94,7 @@ function Statistics() {
       if (supportRes.data.success) setSupportCount(supportRes.data.data)
       if (recoveryRes.data.success) setRecoveryCurve(recoveryRes.data.data)
       if (careRes.data.success) setCareStats(careRes.data.data)
+      if (careMedRes.data.success) setCareMedStats(careMedRes.data.data)
     } catch (e) {
       console.error('加载统计数据失败', e)
     }
@@ -471,6 +482,163 @@ function Statistics() {
           <div className="empty-state">
             <div className="empty-icon">📋</div>
             <p>暂无建议类型数据</p>
+          </div>
+        )}
+      </div>
+
+      <div className="stats-section">
+        <h2 className="stats-section-title">🏥 复诊与用药统计（近30天）</h2>
+
+        {careMedStats ? (
+          <>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-label">复诊完成率</div>
+                <div className="stat-value" style={{ color: '#4ade80' }}>
+                  {careMedStats.visits.completion_rate.toFixed(1)}%
+                </div>
+                <div className="stat-sub">
+                  {careMedStats.visits.completed}/{careMedStats.visits.total} 次完成
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">用药依从率</div>
+                <div className="stat-value" style={{ color: '#60a5fa' }}>
+                  {careMedStats.medication.adherence_rate.toFixed(1)}%
+                </div>
+                <div className="stat-sub">
+                  {careMedStats.medication.taken_total}/{careMedStats.medication.expected_total} 次服用
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">漏服总次数</div>
+                <div className="stat-value" style={{ color: '#fb923c' }}>
+                  {careMedStats.medication.missed_total}
+                </div>
+                <div className="stat-sub">共 {careMedStats.medication.daily_adherence.length} 天</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">不适反应次数</div>
+                <div className="stat-value" style={{ color: '#f472b6' }}>
+                  {careMedStats.reactions.total}
+                </div>
+                <div className="stat-sub">
+                  严重 {careMedStats.reactions.severity_distribution.filter((s: any) => s.severity >= 4).reduce((a: number, b: any) => a + b.count, 0)} 次
+                </div>
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <div className="card chart-card">
+                <h3>复诊完成情况</h3>
+                {careMedStats.visits.daily_rates && careMedStats.visits.daily_rates.length > 0 ? (
+                  <div className="chart-wrapper">
+                    <BarChart data={careMedStats.visits.daily_rates} width={600} height={300}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                      <XAxis dataKey="date" stroke="#a3a3a3" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#a3a3a3" />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Legend />
+                      <Bar dataKey="total" name="计划" fill="#a78bfa" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="completed" name="完成" fill="#4ade80" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无复诊记录</p></div>
+                )}
+              </div>
+
+              <div className="card chart-card">
+                <h3>每日用药依从率</h3>
+                {careMedStats.medication.daily_adherence.length > 0 ? (
+                  <div className="chart-wrapper">
+                    <LineChart data={careMedStats.medication.daily_adherence} width={600} height={300}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                      <XAxis dataKey="date" stroke="#a3a3a3" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#a3a3a3" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => `${v}%`} />
+                      <Legend />
+                      <Line type="monotone" dataKey="rate" name="依从率" stroke="#60a5fa" strokeWidth={3} dot={{ fill: '#60a5fa' }} />
+                    </LineChart>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无用药记录</p></div>
+                )}
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <div className="card chart-card">
+                <h3>漏服次数趋势</h3>
+                {careMedStats.medication.missed_trend && careMedStats.medication.missed_trend.length > 0 ? (
+                  <div className="chart-wrapper">
+                    <AreaChart data={careMedStats.medication.missed_trend} width={600} height={300}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                      <XAxis dataKey="date" stroke="#a3a3a3" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#a3a3a3" />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Legend />
+                      <Area type="monotone" dataKey="missed" name="漏服次数" stroke="#fb923c" fill="#fb923c" fillOpacity={0.3} strokeWidth={2} />
+                    </AreaChart>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无漏服记录</p></div>
+                )}
+              </div>
+
+              <div className="card chart-card">
+                <h3>不适反应分布</h3>
+                {careMedStats.reactions.symptom_distribution.length > 0 ? (
+                  <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <h4 style={{ marginBottom: '12px', fontSize: '14px', color: '#a3a3a3' }}>症状分布</h4>
+                      <div className="chart-wrapper">
+                        <PieChart width={300} height={260}>
+                          <Pie
+                            data={careMedStats.reactions.symptom_distribution}
+                            dataKey="count"
+                            nameKey="symptom"
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={90}
+                            label={({ symptom, percentage }) => `${symptom} ${percentage.toFixed(0)}%`}
+                          >
+                            {careMedStats.reactions.symptom_distribution.map((_: any, idx: number) => (
+                              <Cell key={idx} fill={SUPPORT_COLORS[idx % SUPPORT_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={tooltipStyle} />
+                        </PieChart>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 style={{ marginBottom: '12px', fontSize: '14px', color: '#a3a3a3' }}>严重程度分布</h4>
+                      <div className="chart-wrapper">
+                        <BarChart data={careMedStats.reactions.severity_distribution} width={300} height={260} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                          <XAxis type="number" stroke="#a3a3a3" />
+                          <YAxis type="category" dataKey="severity_label" stroke="#a3a3a3" width={60} />
+                          <Tooltip contentStyle={tooltipStyle} />
+                          <Bar dataKey="count" name="次数" radius={[0, 6, 6, 0]}>
+                            {careMedStats.reactions.severity_distribution.map((item: any, idx: number) => (
+                              <Cell key={idx} fill={item.severity >= 4 ? '#ef4444' : ['#4ade80', '#fbbf24', '#fb923c'][Math.min(item.severity - 1, 2)] || '#60a5fa'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无不适反应记录</p></div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">🏥</div>
+            <p>暂无复诊用药统计数据</p>
           </div>
         )}
       </div>

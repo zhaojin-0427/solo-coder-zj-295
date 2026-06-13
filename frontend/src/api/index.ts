@@ -109,4 +109,65 @@ export const careAPI = {
     api.get(`/care/history?user_id=${userId}&days=${days}`),
 }
 
+export const careMedAPI = {
+  getToday: (userId: number = 1) =>
+    api.get(`/care-med/today?user_id=${userId}`),
+  getAlerts: (userId: number = 1) =>
+    api.get(`/care-med/alerts?user_id=${userId}`),
+  getStats: (userId: number = 1, days: number = 30) =>
+    api.get(`/care-med/stats?user_id=${userId}&days=${days}`),
+  getHistory: (userId: number = 1, days: number = 30) =>
+    api.get(`/care-med/history?user_id=${userId}&days=${days}`),
+
+  getVisits: (userId: number = 1, status?: string, days?: number) => {
+    let url = `/care-med/visits?user_id=${userId}`
+    if (status) url += `&status=${status}`
+    if (days) url += `&days=${days}`
+    return api.get(url)
+  },
+  addVisit: (data: any) =>
+    api.post('/care-med/visits', data),
+  updateVisit: (visitId: number, data: any) =>
+    api.put(`/care-med/visits/${visitId}`, data),
+  completeVisit: (visitId: number, data?: any) =>
+    api.post(`/care-med/visits/${visitId}/complete`, data || {}),
+  deleteVisit: (visitId: number) =>
+    api.delete(`/care-med/visits/${visitId}`),
+
+  getMedications: (userId: number = 1, activeOnly?: boolean) => {
+    let url = `/care-med/medications?user_id=${userId}`
+    if (activeOnly) url += `&active_only=1`
+    return api.get(url)
+  },
+  addMedication: (data: any) =>
+    api.post('/care-med/medications', data),
+  updateMedication: (medId: number, data: any) =>
+    api.put(`/care-med/medications/${medId}`, data),
+  deleteMedication: (medId: number) =>
+    api.delete(`/care-med/medications/${medId}`),
+
+  logMedication: (data: {
+    user_id?: number
+    medication_id: number
+    status: 'taken' | 'missed' | 'skipped' | 'pending'
+    scheduled_time?: string
+    log_date?: string
+    actual_time?: string
+    note?: string
+  }) =>
+    api.post('/care-med/medications/log', data),
+  getMedLogs: (userId: number = 1, days: number = 7, medicationId?: number) => {
+    let url = `/care-med/medications/logs?user_id=${userId}&days=${days}`
+    if (medicationId) url += `&medication_id=${medicationId}`
+    return api.get(url)
+  },
+
+  getReactions: (userId: number = 1, days: number = 30) =>
+    api.get(`/care-med/reactions?user_id=${userId}&days=${days}`),
+  addReaction: (data: any) =>
+    api.post('/care-med/reactions', data),
+  deleteReaction: (reactionId: number) =>
+    api.delete(`/care-med/reactions/${reactionId}`),
+}
+
 export default api

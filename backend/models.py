@@ -115,3 +115,72 @@ class CareSuggestion(db.Model):
     priority = db.Column(db.String(20), default='normal')
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class PostpartumVisit(db.Model):
+    __tablename__ = 'postpartum_visits'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    visit_date = db.Column(db.Date, nullable=False)
+    hospital = db.Column(db.String(200), default='')
+    department = db.Column(db.String(100), default='')
+    doctor_name = db.Column(db.String(50), default='')
+    visit_type = db.Column(db.String(50), default='常规复诊')
+    check_items = db.Column(db.Text, default='')
+    doctor_advice = db.Column(db.Text, default='')
+    status = db.Column(db.String(20), default='pending')
+    result_note = db.Column(db.Text, default='')
+    completed_date = db.Column(db.Date)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    medications = db.relationship('Medication', backref='visit', lazy=True)
+
+
+class Medication(db.Model):
+    __tablename__ = 'medications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    visit_id = db.Column(db.Integer, db.ForeignKey('postpartum_visits.id'))
+    name = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50), default='处方药')
+    dosage = db.Column(db.String(100), default='')
+    frequency_per_day = db.Column(db.Integer, default=1)
+    specific_times = db.Column(db.String(200), default='')
+    start_date = db.Column(db.Date, default=date.today)
+    end_date = db.Column(db.Date)
+    meal_relation = db.Column(db.String(20), default='无要求')
+    notes = db.Column(db.Text, default='')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    logs = db.relationship('MedicationLog', backref='medication', lazy=True)
+
+
+class MedicationLog(db.Model):
+    __tablename__ = 'medication_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    medication_id = db.Column(db.Integer, db.ForeignKey('medications.id'), nullable=False)
+    log_date = db.Column(db.Date, default=date.today, nullable=False)
+    scheduled_time = db.Column(db.String(20), default='')
+    actual_time = db.Column(db.String(20), default='')
+    status = db.Column(db.String(20), default='pending')
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class AdverseReaction(db.Model):
+    __tablename__ = 'adverse_reactions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    medication_id = db.Column(db.Integer, db.ForeignKey('medications.id'))
+    reaction_date = db.Column(db.Date, default=date.today, nullable=False)
+    symptom = db.Column(db.String(200), nullable=False)
+    severity = db.Column(db.Integer, default=3)
+    description = db.Column(db.Text, default='')
+    duration_hours = db.Column(db.Float, default=0)
+    action_taken = db.Column(db.String(200), default='')
+    consulted_doctor = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)

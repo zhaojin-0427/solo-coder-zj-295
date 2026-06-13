@@ -7,7 +7,8 @@ import MessageBoard from './pages/MessageBoard'
 import BabySchedule from './pages/BabySchedule'
 import Statistics from './pages/Statistics'
 import CarePlan from './pages/CarePlan'
-import { emotionAPI, messageAPI, userAPI } from './api'
+import CareMedication from './pages/CareMedication'
+import { emotionAPI, messageAPI, userAPI, careMedAPI } from './api'
 import { LowMoodAlert } from './types'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
 
   const tabs = [
     { key: 'diary', label: '情绪日记', path: '/diary' },
+    { key: 'care-med', label: '复诊用药', path: '/care-med' },
     { key: 'stress', label: '压力分类', path: '/stress' },
     { key: 'care', label: '关怀计划', path: '/care' },
     { key: 'emergency', label: '紧急求助', path: '/emergency' },
@@ -138,6 +140,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/diary" replace />} />
           <Route path="/diary" element={<EmotionDiary onRefresh={() => { loadAlerts(); loadUnreadCount() }} />} />
+          <Route path="/care-med" element={<CareMedication />} />
           <Route path="/stress" element={<StressTypes />} />
           <Route path="/care" element={<CarePlan />} />
           <Route path="/emergency" element={<EmergencyResources />} />
