@@ -59,12 +59,13 @@ export interface LowMoodAlert {
 }
 
 export interface StatsOverview {
-  week_avg_emotion: number
+  period: string
+  avg_emotion: number
+  avg_sleep_hours: number
+  stress_count: number
+  support_count: number
+  record_days: number
   month_avg_emotion: number
-  week_avg_sleep_hours: number
-  week_stress_count: number
-  week_support_count: number
-  record_days_week: number
   record_days_month: number
 }
 

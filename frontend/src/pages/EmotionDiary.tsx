@@ -57,7 +57,6 @@ function EmotionDiary({ onRefresh }: EmotionDiaryProps) {
       }
       if (supportRes.data.success) {
         setSupportTypeList(supportRes.data.data)
-        setSupportUsage(supportRes.data.data.map((t: string) => ({ type: t, used: false, helpfulness: 3 })))
       }
       if (todayRes.data.success && todayRes.data.data) {
         const today = todayRes.data.data
@@ -67,10 +66,17 @@ function EmotionDiary({ onRefresh }: EmotionDiaryProps) {
         setNote(today.note)
         setSelfAssessment(today.self_assessment)
         setStressTypes(today.stress_types || [])
-        if (today.support_usage && today.support_usage.length > 0) {
-          setSupportUsage(today.support_usage)
-        }
+        const savedSupport = today.support_usage || []
+        const allTypes: string[] = supportRes.data.success ? supportRes.data.data : []
+        const merged = allTypes.map((t: string) => {
+          const existing = savedSupport.find((s: any) => s.type === t)
+          return existing || { type: t, used: false, helpfulness: 3 }
+        })
+        setSupportUsage(merged.length > 0 ? merged : allTypes.map((t: string) => ({ type: t, used: false, helpfulness: 3 })))
         setTodayRecorded(true)
+      } else {
+        const allTypes: string[] = supportRes.data.success ? supportRes.data.data : []
+        setSupportUsage(allTypes.map((t: string) => ({ type: t, used: false, helpfulness: 3 })))
       }
       if (recordsRes.data.success) {
         setRecords(recordsRes.data.data)

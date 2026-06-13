@@ -60,7 +60,7 @@ function Statistics() {
   const loadData = async () => {
     try {
       const [overviewRes, trendRes, stressRes, supportRes, recoveryRes] = await Promise.all([
-        statsAPI.getOverview(1),
+        statsAPI.getOverview(1, period),
         statsAPI.getEmotionTrend(1, period),
         statsAPI.getStressDistribution(1, period),
         statsAPI.getSupportCount(1, period),
@@ -130,28 +130,28 @@ function Statistics() {
         {overview && (
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
             <div className="stat-card">
-              <div className="stat-value">{overview.week_avg_emotion}</div>
-              <div className="stat-label">本周平均情绪</div>
+              <div className="stat-value">{overview.avg_emotion}</div>
+              <div className="stat-label">{period === 'week' ? '本周' : '本月'}平均情绪</div>
             </div>
             <div className="stat-card">
               <div className="stat-value">{overview.month_avg_emotion}</div>
               <div className="stat-label">本月平均情绪</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{overview.week_avg_sleep_hours}h</div>
-              <div className="stat-label">本周平均睡眠</div>
+              <div className="stat-value">{overview.avg_sleep_hours}h</div>
+              <div className="stat-label">{period === 'week' ? '本周' : '本月'}平均睡眠</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{overview.week_stress_count}</div>
-              <div className="stat-label">本周压力事件</div>
+              <div className="stat-value">{overview.stress_count}</div>
+              <div className="stat-label">{period === 'week' ? '本周' : '本月'}压力事件</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{overview.week_support_count}</div>
+              <div className="stat-value">{overview.support_count}</div>
               <div className="stat-label">获得支持次数</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{overview.record_days_week}天</div>
-              <div className="stat-label">本周记录天数</div>
+              <div className="stat-value">{overview.record_days}天</div>
+              <div className="stat-label">{period === 'week' ? '本周' : '本月'}记录天数</div>
             </div>
           </div>
         )}

@@ -61,8 +61,8 @@ export const babyAPI = {
 }
 
 export const statsAPI = {
-  getOverview: (userId: number = 1) =>
-    api.get(`/stats/overview?user_id=${userId}`),
+  getOverview: (userId: number = 1, period: string = 'week') =>
+    api.get(`/stats/overview?user_id=${userId}&period=${period}`),
   getEmotionTrend: (userId: number = 1, period: string = 'week') =>
     api.get(`/stats/emotion-trend?user_id=${userId}&period=${period}`),
   getStressDistribution: (userId: number = 1, period: string = 'week') =>

@@ -168,14 +168,22 @@ def recovery_curve():
 @stats_bp.route('/overview', methods=['GET'])
 def get_overview():
     user_id = request.args.get('user_id', 1, type=int)
+    period = request.args.get('period', 'week')
 
     today = date.today()
-    week_ago = today - timedelta(days=7)
+
+    if period == 'month':
+        primary_start = today - timedelta(days=30)
+        primary_label = 'month'
+    else:
+        primary_start = today - timedelta(days=7)
+        primary_label = 'week'
+
     month_ago = today - timedelta(days=30)
 
-    week_records = EmotionRecord.query.filter(
+    primary_records = EmotionRecord.query.filter(
         EmotionRecord.user_id == user_id,
-        EmotionRecord.record_date >= week_ago
+        EmotionRecord.record_date >= primary_start
     ).all()
 
     month_records = EmotionRecord.query.filter(
@@ -183,31 +191,32 @@ def get_overview():
         EmotionRecord.record_date >= month_ago
     ).all()
 
-    week_avg_emotion = sum(r.emotion_score for r in week_records) / len(week_records) if week_records else 0
+    primary_avg_emotion = sum(r.emotion_score for r in primary_records) / len(primary_records) if primary_records else 0
     month_avg_emotion = sum(r.emotion_score for r in month_records) / len(month_records) if month_records else 0
 
-    week_avg_sleep = sum(r.sleep_hours for r in week_records) / len(week_records) if week_records else 0
+    primary_avg_sleep = sum(r.sleep_hours for r in primary_records) / len(primary_records) if primary_records else 0
 
-    week_stress = StressRecord.query.filter(
+    primary_stress = StressRecord.query.filter(
         StressRecord.user_id == user_id,
-        StressRecord.record_date >= week_ago
+        StressRecord.record_date >= primary_start
     ).count()
 
-    support_count = SupportUsage.query.filter(
+    primary_support = SupportUsage.query.filter(
         SupportUsage.user_id == user_id,
-        SupportUsage.record_date >= week_ago,
+        SupportUsage.record_date >= primary_start,
         SupportUsage.used == True
     ).count()
 
     return jsonify({
         'success': True,
         'data': {
-            'week_avg_emotion': round(week_avg_emotion, 1),
+            'period': primary_label,
+            'avg_emotion': round(primary_avg_emotion, 1),
+            'avg_sleep_hours': round(primary_avg_sleep, 1),
+            'stress_count': primary_stress,
+            'support_count': primary_support,
+            'record_days': len(primary_records),
             'month_avg_emotion': round(month_avg_emotion, 1),
-            'week_avg_sleep_hours': round(week_avg_sleep, 1),
-            'week_stress_count': week_stress,
-            'week_support_count': support_count,
-            'record_days_week': len(week_records),
             'record_days_month': len(month_records)
         }
     })
