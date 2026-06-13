@@ -138,21 +138,21 @@ def generate_suggestions(user_id):
             'priority': 'urgent',
         })
 
-    if avg_sleep < 5 or avg_quality < 4:
+    if avg_sleep < 5 or avg_quality < 3:
         sleep_desc = []
         if avg_sleep < 5:
             sleep_desc.append(f'近7天平均睡眠时长仅{avg_sleep:.1f}小时')
-        if avg_quality < 4:
-            sleep_desc.append(f'睡眠质量均分为{avg_quality:.1f}分（满分10分）')
+        if avg_quality < 3:
+            sleep_desc.append(f'睡眠质量均分为{avg_quality:.1f}分（满分5分）')
         suggestions.append({
             'category': 'rest_reminder',
             'content': f'{"，".join(sleep_desc)}。建议：①宝宝睡觉时尽量同步休息，不要做家务；②与家人商量轮班照顾宝宝，确保您每天有至少5小时连续睡眠；③睡前避免使用手机，可尝试温水泡脚或轻音乐助眠。',
             'priority': 'urgent' if consecutive_sleep_deficit >= 3 else 'normal',
         })
-    elif avg_sleep < 6 or avg_quality < 6:
+    elif avg_sleep < 6 or avg_quality < 4:
         suggestions.append({
             'category': 'rest_reminder',
-            'content': f'近7天平均睡眠{avg_sleep:.1f}小时，睡眠质量{avg_quality:.1f}分，略低于理想水平。建议：①争取在白天宝宝小睡时补充1-2次短觉；②晚间减少光线和噪音干扰；③与伴侣协商分担夜间喂奶任务。',
+            'content': f'近7天平均睡眠{avg_sleep:.1f}小时，睡眠质量{avg_quality:.1f}分（满分5分），略低于理想水平。建议：①争取在白天宝宝小睡时补充1-2次短觉；②晚间减少光线和噪音干扰；③与伴侣协商分担夜间喂奶任务。',
             'priority': 'normal',
         })
 
@@ -238,6 +238,43 @@ def generate_suggestions(user_id):
 def get_today_suggestions():
     user_id = request.args.get('user_id', 1, type=int)
     today = date.today()
+
+    from datetime import datetime
+
+    latest_record_time = None
+    for ModelClass in [EmotionRecord, StressRecord, SupportUsage, BabySchedule]:
+        query = ModelClass.query.filter(
+            getattr(ModelClass, 'user_id') == user_id,
+            getattr(ModelClass, 'record_date') == today
+        )
+        for rec in query.all():
+            rt = getattr(rec, 'updated_at', None) or getattr(rec, 'created_at', None)
+            if rt and (latest_record_time is None or rt > latest_record_time):
+                latest_record_time = rt
+
+    existing = CareSuggestion.query.filter_by(
+        user_id=user_id,
+        suggestion_date=today
+    ).all()
+
+    needs_refresh = False
+    if existing:
+        pending_suggestions = [s for s in existing if s.status == 'pending']
+        if pending_suggestions and latest_record_time:
+            earliest_pending = min(s.created_at for s in pending_suggestions)
+            if latest_record_time > earliest_pending:
+                needs_refresh = True
+    else:
+        needs_refresh = True
+
+    non_pending = [s for s in existing if s.status != 'pending']
+
+    if needs_refresh:
+        for s in existing:
+            if s.status == 'pending':
+                db.session.delete(s)
+        db.session.commit()
+        existing = non_pending
 
     existing = CareSuggestion.query.filter_by(
         user_id=user_id,

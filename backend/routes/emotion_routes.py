@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, date, timedelta
-from models import db, EmotionRecord, StressRecord, SupportUsage, LowMoodAlert, CounselingResource
+from models import db, EmotionRecord, StressRecord, SupportUsage, LowMoodAlert, CounselingResource, CareSuggestion
 
 emotion_bp = Blueprint('emotion', __name__)
 
@@ -105,6 +105,13 @@ def add_record():
         )
         db.session.add(support)
 
+    db.session.commit()
+
+    CareSuggestion.query.filter_by(
+        user_id=user_id,
+        suggestion_date=record_date_obj,
+        status='pending'
+    ).delete()
     db.session.commit()
 
     alert = check_low_mood(user_id)

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import date, timedelta
-from models import db, BabySchedule
+from models import db, BabySchedule, CareSuggestion
 
 baby_bp = Blueprint('baby', __name__)
 
@@ -65,6 +65,13 @@ def add_schedule():
         )
         db.session.add(schedule)
 
+    db.session.commit()
+
+    CareSuggestion.query.filter_by(
+        user_id=user_id,
+        suggestion_date=record_date_obj,
+        status='pending'
+    ).delete()
     db.session.commit()
 
     return jsonify({'success': True, 'data': {'id': schedule.id}})
