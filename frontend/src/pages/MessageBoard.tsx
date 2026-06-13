@@ -13,6 +13,7 @@ function MessageBoard({ onRead }: MessageBoardProps) {
   const [senderRole, setSenderRole] = useState<'partner' | 'mom'>('mom')
   const [submitting, setSubmitting] = useState(false)
   const [showCompose, setShowCompose] = useState(false)
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     loadMessages()
@@ -65,7 +66,8 @@ function MessageBoard({ onRead }: MessageBoardProps) {
     }
   }
 
-  const handleMarkViewed = async (messageId: number) => {
+  const handleRevealMessage = async (messageId: number) => {
+    setRevealedIds(prev => new Set(prev).add(messageId))
     try {
       await messageAPI.markViewed(messageId)
       setMessages(prev =>
@@ -80,6 +82,12 @@ function MessageBoard({ onRead }: MessageBoardProps) {
   }
 
   const handleMarkAllViewed = async () => {
+    const unreadMessages = messages.filter(m => !m.is_viewed)
+    setRevealedIds(prev => {
+      const next = new Set(prev)
+      unreadMessages.forEach(m => next.add(m.id))
+      return next
+    })
     try {
       await messageAPI.markAllViewed(1)
       setMessages(prev =>
@@ -141,7 +149,7 @@ function MessageBoard({ onRead }: MessageBoardProps) {
               </span>
               {unreadCount > 0 && (
                 <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: '12px' }} onClick={handleMarkAllViewed}>
-                  全部已读
+                  全部查看
                 </button>
               )}
             </div>
@@ -152,26 +160,42 @@ function MessageBoard({ onRead }: MessageBoardProps) {
                 <p>还没有留言，让伴侣给你写些鼓励的话吧~</p>
               </div>
             ) : (
-              messages.map(message => (
-                <div
-                  key={message.id}
-                  className={`message-item ${!message.is_viewed ? 'unread' : ''}`}
-                  onClick={() => { if (!message.is_viewed) handleMarkViewed(message.id) }}
-                >
-                  <div className="message-header">
-                    <span className="sender">
-                      {message.is_anonymous ? '🎭 匿名的TA' : `💝 ${message.sender_name}`}
-                    </span>
-                    <span className="time">{formatTime(message.created_at)}</span>
-                  </div>
-                  <div className="message-content">{message.content}</div>
-                  {!message.is_viewed && (
-                    <div style={{ textAlign: 'right', marginTop: '8px' }}>
-                      <span style={{ fontSize: '11px', color: '#ff6b8a' }}>● 新消息</span>
+              messages.map(message => {
+                const isRevealed = message.is_viewed || revealedIds.has(message.id)
+                return (
+                  <div
+                    key={message.id}
+                    className={`message-item ${!message.is_viewed ? 'unread' : ''}`}
+                  >
+                    <div className="message-header">
+                      <span className="sender">
+                        {message.is_anonymous ? '🎭 匿名的TA' : `💝 ${message.sender_name}`}
+                      </span>
+                      <span className="time">{formatTime(message.created_at)}</span>
                     </div>
-                  )}
-                </div>
-              ))
+                    {!isRevealed ? (
+                      <div
+                        onClick={() => handleRevealMessage(message.id)}
+                        style={{
+                          padding: '12px',
+                          background: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                        }}
+                      >
+                        <span style={{ fontSize: '20px' }}>💌</span>
+                        <p style={{ fontSize: '13px', color: '#9d174d', marginTop: '6px' }}>
+                          你收到一条留言，点击查看
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="message-content">{message.content}</div>
+                    )}
+                  </div>
+                )
+              })
             )}
           </div>
         ) : (
@@ -252,7 +276,7 @@ function MessageBoard({ onRead }: MessageBoardProps) {
         <div style={{ fontSize: '14px', lineHeight: 1.8, color: '#9d174d' }}>
           <p>亲爱的伴侣：</p>
           <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-            <li>产后妈妈的情绪波动很大，这是激素变化导致的，不是她"矫情"</li>
+            <li>产后妈妈的情绪波动很大，这是激素变化导致的，不是她'矫情'</li>
             <li>多听她说，少给建议。有时候她需要的只是一个拥抱</li>
             <li>主动承担家务和照顾宝宝的责任，让她有时间休息</li>
             <li>鼓励她寻求专业帮助，如果她需要的话</li>

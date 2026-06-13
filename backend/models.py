@@ -9,7 +9,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='mom')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     emotion_records = db.relationship('EmotionRecord', backref='user', lazy=True)
     stress_records = db.relationship('StressRecord', backref='user', lazy=True)
@@ -28,7 +28,7 @@ class EmotionRecord(db.Model):
     sleep_hours = db.Column(db.Float, default=0)
     note = db.Column(db.Text, default='')
     self_assessment = db.Column(db.Integer, default=5)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     stress_items = db.relationship('StressRecord', backref='emotion_record', lazy=True)
     support_items = db.relationship('SupportUsage', backref='emotion_record', lazy=True)
@@ -43,7 +43,7 @@ class StressRecord(db.Model):
     severity = db.Column(db.Integer, default=3)
     description = db.Column(db.Text, default='')
     record_date = db.Column(db.Date, default=date.today)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class SupportUsage(db.Model):
@@ -55,7 +55,7 @@ class SupportUsage(db.Model):
     used = db.Column(db.Boolean, default=False)
     helpfulness = db.Column(db.Integer, default=0)
     record_date = db.Column(db.Date, default=date.today)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class Message(db.Model):
@@ -66,7 +66,7 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     is_anonymous = db.Column(db.Boolean, default=True)
     is_viewed = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class BabySchedule(db.Model):
@@ -78,7 +78,7 @@ class BabySchedule(db.Model):
     feed_count = db.Column(db.Integer, default=0)
     crying_duration = db.Column(db.Integer, default=0)
     note = db.Column(db.Text, default='')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class CounselingResource(db.Model):
@@ -89,7 +89,7 @@ class CounselingResource(db.Model):
     contact = db.Column(db.String(200), default='')
     type = db.Column(db.String(50), default='hotline')
     is_emergency = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class LowMoodAlert(db.Model):
@@ -101,4 +101,4 @@ class LowMoodAlert(db.Model):
     average_score = db.Column(db.Float, default=0)
     resources_pushed = db.Column(db.Text, default='')
     is_acknowledged = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)

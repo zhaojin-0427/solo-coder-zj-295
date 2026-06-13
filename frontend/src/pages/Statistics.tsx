@@ -110,7 +110,7 @@ function Statistics() {
     <div>
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 className="card-title" style={{ marginBottom: 0 }}>� 数据概览</h2>
+          <h2 className="card-title" style={{ marginBottom: 0 }}>📊 数据概览</h2>
           <div className="tabs-row" style={{ marginBottom: 0 }}>
             <button
               className={`tab-btn ${period === 'week' ? 'active' : ''}`}
@@ -244,7 +244,7 @@ function Statistics() {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-icon">�</div>
+            <div className="empty-icon">📊</div>
             <p>暂无压力记录数据</p>
           </div>
         )}
