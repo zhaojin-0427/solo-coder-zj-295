@@ -249,3 +249,141 @@ export interface HistoryItem {
   type: 'visit' | 'med_log' | 'reaction'
   data: any
 }
+
+export interface FeedingRecord {
+  id: number
+  feed_type: 'breast' | 'bottle' | 'pump'
+  feed_type_label: string
+  feed_time: string
+  time_label?: string
+  duration_minutes: number
+  breast_side: 'left' | 'right' | 'both' | ''
+  milk_amount_ml: number
+  baby_acceptance: number
+  note: string
+  care_count?: number
+}
+
+export interface BreastCareRecord {
+  id: number
+  feeding_record_id: number | null
+  record_date: string
+  care_type: 'engorgement' | 'blocked_duct' | 'cracked_nipple' | 'mastitis' | 'sore_nipple' | 'other'
+  care_type_label: string
+  severity: number
+  severity_label: string
+  breast_side: 'left' | 'right' | 'both'
+  description: string
+  duration_hours: number
+  action_taken: string
+  consulted_doctor: boolean
+}
+
+export interface LactationGoal {
+  id: number
+  goal_type: string
+  goal_type_label: string
+  target_value: number
+  current_value: number
+  unit: string
+  start_date: string | null
+  target_date: string | null
+  status: 'active' | 'completed' | 'paused'
+  note: string
+  completion_rate: number
+  achieved?: boolean
+}
+
+export interface LactationAdvice {
+  id: number
+  advisor: string
+  advisor_type: 'doctor' | 'lactation_consultant' | 'nurse' | 'other'
+  advisor_type_label: string
+  content: string
+  advice_date: string | null
+  is_completed: boolean
+  follow_up_date: string | null
+  note: string
+}
+
+export interface FeedingAlert {
+  level: 'urgent' | 'warn' | 'info'
+  category: string
+  title: string
+  content: string
+  resources?: { title: string; contact: string; type: string }[]
+  action_hint?: string
+}
+
+export interface FeedingTodayData {
+  records: FeedingRecord[]
+  summary: {
+    count: number
+    total_milk_ml: number
+    total_duration_min: number
+  }
+}
+
+export interface FeedingOverview {
+  today: FeedingTodayData
+  alerts: FeedingAlert[]
+  need_urgent: boolean
+  goals_today: LactationGoal[]
+  recent_care: BreastCareRecord[]
+  date: string
+}
+
+export interface FeedingStats {
+  period_days: number
+  overview: {
+    total_feed_count: number
+    avg_weekly_count: number
+    avg_daily_count: number
+    total_milk_ml: number
+    avg_baby_acceptance: number
+    care_record_count: number
+    severe_care_count: number
+    active_goals_count: number
+    achieved_goals_count: number
+    overall_goal_rate: number
+  }
+  daily_trend: {
+    date: string
+    feed_count: number
+    total_milk_ml: number
+    total_duration_min: number
+  }[]
+  milk_curve: {
+    date: string
+    milk_ml: number
+    feed_count: number
+  }[]
+  type_distribution: {
+    type: string
+    type_label: string
+    count: number
+    percentage: number
+  }[]
+  side_distribution: {
+    side: string
+    side_label: string
+    count: number
+    percentage: number
+  }[]
+  breast_care_stats: {
+    total: number
+    severe_count: number
+    type_distribution: {
+      type: string
+      type_label: string
+      count: number
+      percentage: number
+    }[]
+    severity_distribution: {
+      severity: number
+      severity_label: string
+      count: number
+    }[]
+  }
+  goal_achievement: LactationGoal[]
+}

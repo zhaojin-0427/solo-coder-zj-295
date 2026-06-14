@@ -184,3 +184,81 @@ class AdverseReaction(db.Model):
     action_taken = db.Column(db.String(200), default='')
     consulted_doctor = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class FeedingRecord(db.Model):
+    __tablename__ = 'feeding_records'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    feed_type = db.Column(db.String(20), nullable=False)
+    feed_time = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    duration_minutes = db.Column(db.Integer, default=0)
+    breast_side = db.Column(db.String(10), default='')
+    milk_amount_ml = db.Column(db.Float, default=0)
+    baby_acceptance = db.Column(db.Integer, default=3)
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    care_records = db.relationship('BreastCareRecord', backref='feeding_record', lazy=True)
+
+
+class BreastCareRecord(db.Model):
+    __tablename__ = 'breast_care_records'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    feeding_record_id = db.Column(db.Integer, db.ForeignKey('feeding_records.id'))
+    record_date = db.Column(db.Date, default=date.today, nullable=False)
+    care_type = db.Column(db.String(50), nullable=False)
+    severity = db.Column(db.Integer, default=3)
+    breast_side = db.Column(db.String(10), default='both')
+    description = db.Column(db.Text, default='')
+    duration_hours = db.Column(db.Float, default=0)
+    action_taken = db.Column(db.String(200), default='')
+    consulted_doctor = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class LactationGoal(db.Model):
+    __tablename__ = 'lactation_goals'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    goal_type = db.Column(db.String(50), nullable=False)
+    target_value = db.Column(db.Float, default=0)
+    current_value = db.Column(db.Float, default=0)
+    unit = db.Column(db.String(20), default='')
+    start_date = db.Column(db.Date, default=date.today)
+    target_date = db.Column(db.Date)
+    status = db.Column(db.String(20), default='active')
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class LactationAdvice(db.Model):
+    __tablename__ = 'lactation_advices'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    advisor = db.Column(db.String(100), nullable=False)
+    advisor_type = db.Column(db.String(20), default='doctor')
+    content = db.Column(db.Text, nullable=False)
+    advice_date = db.Column(db.Date, default=date.today)
+    is_completed = db.Column(db.Boolean, default=False)
+    follow_up_date = db.Column(db.Date)
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class FeedingAlert(db.Model):
+    __tablename__ = 'feeding_alerts'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)
+    level = db.Column(db.String(20), default='info')
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    alert_date = db.Column(db.Date, default=date.today)
+    is_acknowledged = db.Column(db.Boolean, default=False)
+    resources_pushed = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)

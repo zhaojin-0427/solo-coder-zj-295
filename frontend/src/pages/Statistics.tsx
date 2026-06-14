@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { statsAPI, careAPI, careMedAPI } from '../api'
+import { statsAPI, careAPI, careMedAPI, feedingAPI } from '../api'
 import {
   StatsOverview,
   EmotionTrendItem,
@@ -7,6 +7,7 @@ import {
   SupportCountData,
   CareStats,
   CareMedStats,
+  FeedingStats,
 } from '../types'
 import {
   LineChart,
@@ -55,6 +56,14 @@ const CARE_COLORS = [
   '#60a5fa',
 ]
 
+const FEEDING_COLORS = [
+  '#ec4899',
+  '#8b5cf6',
+  '#06b6d4',
+  '#f59e0b',
+  '#10b981',
+]
+
 const tooltipStyle = {
   backgroundColor: '#1e1e1e',
   border: '1px solid #333',
@@ -70,6 +79,7 @@ function Statistics() {
   const [recoveryCurve, setRecoveryCurve] = useState<any[]>([])
   const [careStats, setCareStats] = useState<CareStats | null>(null)
   const [careMedStats, setCareMedStats] = useState<CareMedStats | null>(null)
+  const [feedingStats, setFeedingStats] = useState<FeedingStats | null>(null)
   const [period, setPeriod] = useState<'week' | 'month'>('week')
 
   useEffect(() => {
@@ -78,7 +88,7 @@ function Statistics() {
 
   const loadData = async () => {
     try {
-      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes, careMedRes] = await Promise.all([
+      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes, careMedRes, feedingRes] = await Promise.all([
         statsAPI.getOverview(1, period),
         statsAPI.getEmotionTrend(1, period),
         statsAPI.getStressDistribution(1, period),
@@ -86,6 +96,7 @@ function Statistics() {
         statsAPI.getRecoveryCurve(1, period === 'week' ? 'month' : 'month'),
         careAPI.getStats(1, 7),
         careMedAPI.getStats(1, 30),
+        feedingAPI.getStats(1, 30),
       ])
 
       if (overviewRes.data.success) setOverview(overviewRes.data.data)
@@ -95,6 +106,7 @@ function Statistics() {
       if (recoveryRes.data.success) setRecoveryCurve(recoveryRes.data.data)
       if (careRes.data.success) setCareStats(careRes.data.data)
       if (careMedRes.data.success) setCareMedStats(careMedRes.data.data)
+      if (feedingRes.data.success) setFeedingStats(feedingRes.data.data)
     } catch (e) {
       console.error('加载统计数据失败', e)
     }
@@ -639,6 +651,327 @@ function Statistics() {
           <div className="empty-state">
             <div className="empty-icon">🏥</div>
             <p>暂无复诊用药统计数据</p>
+          </div>
+        )}
+      </div>
+
+      <div className="stats-section">
+        <h2 className="stats-section-title">🤱 母乳喂养与泌乳统计（近30天）</h2>
+
+        {feedingStats ? (
+          <>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-label">总喂养次数</div>
+                <div className="stat-value" style={{ color: '#ec4899' }}>
+                  {feedingStats.overview.total_feed_count}
+                </div>
+                <div className="stat-sub">日均 {feedingStats.overview.avg_daily_count} 次</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">总产奶量</div>
+                <div className="stat-value" style={{ color: '#3b82f6' }}>
+                  {feedingStats.overview.total_milk_ml}ml
+                </div>
+                <div className="stat-sub">日均约 {Math.round(feedingStats.overview.total_milk_ml / 30)}ml</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">宝宝平均接受度</div>
+                <div className="stat-value" style={{ color: '#10b981' }}>
+                  {feedingStats.overview.avg_baby_acceptance}
+                </div>
+                <div className="stat-sub">满分 5 分</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">乳房不适事件</div>
+                <div className="stat-value" style={{ color: '#f59e0b' }}>
+                  {feedingStats.overview.care_record_count}
+                </div>
+                <div className="stat-sub">
+                  严重 {feedingStats.overview.severe_care_count} 次
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">目标达成率</div>
+                <div className="stat-value" style={{ color: '#8b5cf6' }}>
+                  {feedingStats.overview.overall_goal_rate}%
+                </div>
+                <div className="stat-sub">
+                  {feedingStats.overview.achieved_goals_count}/{feedingStats.overview.active_goals_count} 项达成
+                </div>
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <div className="card chart-card">
+                <h3>📈 喂养次数趋势（近30天）</h3>
+                {feedingStats.daily_trend && feedingStats.daily_trend.length > 0 ? (
+                  <div className="chart-wrapper">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={feedingStats.daily_trend.map(d => ({
+                        date: formatDate(d.date),
+                        喂养次数: d.feed_count,
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                        <XAxis dataKey="date" stroke="#a3a3a3" tick={{ fontSize: 10 }} />
+                        <YAxis stroke="#a3a3a3" />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Legend />
+                        <Bar dataKey="喂养次数" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无喂养记录</p></div>
+                )}
+              </div>
+
+              <div className="card chart-card">
+                <h3>💧 奶量变化曲线</h3>
+                {feedingStats.milk_curve && feedingStats.milk_curve.some(m => m.milk_ml > 0) ? (
+                  <div className="chart-wrapper">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={feedingStats.milk_curve.map(m => ({
+                        date: formatDate(m.date),
+                        奶量_ml: m.milk_ml,
+                      }))}>
+                        <defs>
+                          <linearGradient id="colorMilk" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                        <XAxis dataKey="date" stroke="#a3a3a3" tick={{ fontSize: 10 }} />
+                        <YAxis stroke="#a3a3a3" />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Legend />
+                        <Area
+                          type="monotone"
+                          dataKey="奶量_ml"
+                          stroke="#3b82f6"
+                          fill="url(#colorMilk)"
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无吸奶量数据</p></div>
+                )}
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <div className="card chart-card">
+                <h3>🍼 喂养方式占比</h3>
+                {feedingStats.type_distribution && feedingStats.type_distribution.length > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ width: '50%', height: '250px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={feedingStats.type_distribution.map(t => ({
+                              name: t.type_label,
+                              value: t.count,
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={90}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {feedingStats.type_distribution.map((_, index) => (
+                              <Cell key={`feed-type-${index}`} fill={FEEDING_COLORS[index % FEEDING_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={tooltipStyle} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {feedingStats.type_distribution.map((t, index) => (
+                        <div
+                          key={t.type}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '8px 0',
+                            borderBottom: '1px solid #f0f0f0',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '3px',
+                                background: FEEDING_COLORS[index % FEEDING_COLORS.length],
+                              }}
+                            />
+                            <span style={{ fontSize: '13px' }}>{t.type_label}</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 500 }}>{t.count}次</div>
+                            <div style={{ fontSize: '11px', color: '#999' }}>{t.percentage}%</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无喂养记录</p></div>
+                )}
+              </div>
+
+              <div className="card chart-card">
+                <h3>🎯 泌乳目标达成情况</h3>
+                {feedingStats.goal_achievement && feedingStats.goal_achievement.length > 0 ? (
+                  <div style={{ padding: '8px 0' }}>
+                    {feedingStats.goal_achievement.map((goal, index) => (
+                      <div key={goal.id} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '13px', color: '#e5e7eb' }}>
+                            {goal.goal_type_label}
+                          </span>
+                          <span style={{ fontSize: '13px', color: goal.achieved ? '#4ade80' : '#fbbf24', fontWeight: 500 }}>
+                            {goal.current_value}/{goal.target_value}{goal.unit} ({goal.completion_rate}%)
+                          </span>
+                        </div>
+                        <div style={{ height: '10px', background: '#374151', borderRadius: '5px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              width: `${Math.min(goal.completion_rate, 100)}%`,
+                              background: goal.achieved ? '#4ade80' : FEEDING_COLORS[index % FEEDING_COLORS.length],
+                              borderRadius: '5px',
+                              transition: 'width 0.3s',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无泌乳目标，去喂养护理页面设置吧</p></div>
+                )}
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <div className="card chart-card">
+                <h3>🏥 乳房不适事件分布</h3>
+                {feedingStats.breast_care_stats && feedingStats.breast_care_stats.total > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ width: '50%', height: '250px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={feedingStats.breast_care_stats.type_distribution.map(t => ({
+                              name: t.type_label,
+                              value: t.count,
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={90}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {feedingStats.breast_care_stats.type_distribution.map((_, index) => (
+                              <Cell key={`care-${index}`} fill={['#ef4444', '#f97316', '#f59e0b', '#eab308', '#8b5cf6', '#6b7280'][index % 6]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={tooltipStyle} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {feedingStats.breast_care_stats.type_distribution.map((t, index) => (
+                        <div
+                          key={t.type}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '8px 0',
+                            borderBottom: '1px solid #f0f0f0',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '3px',
+                                background: ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#8b5cf6', '#6b7280'][index % 6],
+                              }}
+                            />
+                            <span style={{ fontSize: '13px' }}>{t.type_label}</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 500 }}>{t.count}次</div>
+                            <div style={{ fontSize: '11px', color: '#999' }}>{t.percentage}%</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无乳房护理记录</p></div>
+                )}
+              </div>
+
+              <div className="card chart-card">
+                <h3>📊 不适严重程度分布</h3>
+                {feedingStats.breast_care_stats && feedingStats.breast_care_stats.severity_distribution.length > 0 ? (
+                  <div className="chart-wrapper">
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart
+                        data={feedingStats.breast_care_stats.severity_distribution.map(s => ({
+                          严重程度: s.severity_label,
+                          次数: s.count,
+                        }))}
+                        layout="vertical"
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                        <XAxis type="number" stroke="#a3a3a3" />
+                        <YAxis type="category" dataKey="严重程度" stroke="#a3a3a3" width={70} />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Bar dataKey="次数" name="次数" radius={[0, 6, 6, 0]}>
+                          {feedingStats.breast_care_stats.severity_distribution.map((item: any, idx: number) => (
+                            <Cell
+                              key={idx}
+                              fill={item.severity >= 4 ? '#ef4444' : ['#4ade80', '#22c55e', '#fbbf24', '#fb923c'][Math.min(item.severity - 1, 3)] || '#60a5fa'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="empty-state"><p>暂无严重程度数据</p></div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '16px', padding: '16px', background: '#fdf2f8', borderRadius: '12px' }}>
+              <h4 style={{ fontSize: '14px', marginBottom: '8px', color: '#9d174d' }}>💡 母乳喂养小贴士</h4>
+              <ul style={{ fontSize: '13px', color: '#9d174d', lineHeight: 1.8, marginLeft: '18px' }}>
+                <li>新生儿建议按需喂养，每天约 8-12 次，每次 15-30 分钟</li>
+                <li>保持双侧乳房交替喂养，避免单侧过度充盈导致堵奶</li>
+                <li>每天保持充足的水分摄入（2000-2500ml），有助于乳汁分泌</li>
+                <li>充分休息、减少压力，良好的情绪有助于泌乳</li>
+                <li>如出现乳房严重胀痛、堵奶超过24小时或伴随发烧，请及时就医 💕</li>
+              </ul>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">🤱</div>
+            <p>暂无喂养统计数据，去喂养护理页面记录吧</p>
           </div>
         )}
       </div>

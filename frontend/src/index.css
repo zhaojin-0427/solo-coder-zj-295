@@ -535,6 +535,23 @@ body {
   z-index: 1000;
 }
 
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
 .modal-content {
   background: white;
   border-radius: 16px;
@@ -563,6 +580,64 @@ body {
   font-size: 24px;
   cursor: pointer;
   color: #888;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: #ff6b8a;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-text:hover {
+  background: rgba(255, 107, 138, 0.1);
+}
+
+.stat-card .stat-sub {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.stats-section {
+  margin-top: 24px;
+}
+
+.stats-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 4px solid #ff9a9e;
+}
+
+.chart-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 0;
+}
+
+.chart-card h3 {
+  font-size: 15px;
+  color: #e5e7eb;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.chart-wrapper {
+  width: 100%;
+}
+
+.chart-card .empty-state {
+  padding: 40px 20px;
+  color: #6b7280;
+  text-align: center;
 }
 
 @media (max-width: 768px) {

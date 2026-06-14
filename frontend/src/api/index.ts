@@ -170,4 +170,60 @@ export const careMedAPI = {
     api.delete(`/care-med/reactions/${reactionId}`),
 }
 
+export const feedingAPI = {
+  getToday: (userId: number = 1) =>
+    api.get(`/feeding/today?user_id=${userId}`),
+  getAlerts: (userId: number = 1) =>
+    api.get(`/feeding/alerts?user_id=${userId}`),
+  getStats: (userId: number = 1, days: number = 30) =>
+    api.get(`/feeding/stats?user_id=${userId}&days=${days}`),
+
+  getRecords: (userId: number = 1, days: number = 30, feedType?: string) => {
+    let url = `/feeding/records?user_id=${userId}&days=${days}`
+    if (feedType) url += `&feed_type=${feedType}`
+    return api.get(url)
+  },
+  getTodayRecords: (userId: number = 1) =>
+    api.get(`/feeding/records/today?user_id=${userId}`),
+  addRecord: (data: any) =>
+    api.post('/feeding/records', data),
+  updateRecord: (recordId: number, data: any) =>
+    api.put(`/feeding/records/${recordId}`, data),
+  deleteRecord: (recordId: number) =>
+    api.delete(`/feeding/records/${recordId}`),
+
+  getCareRecords: (userId: number = 1, days: number = 30) =>
+    api.get(`/feeding/care-records?user_id=${userId}&days=${days}`),
+  addCareRecord: (data: any) =>
+    api.post('/feeding/care-records', data),
+  updateCareRecord: (recordId: number, data: any) =>
+    api.put(`/feeding/care-records/${recordId}`, data),
+  deleteCareRecord: (recordId: number) =>
+    api.delete(`/feeding/care-records/${recordId}`),
+
+  getGoals: (userId: number = 1, status?: string) => {
+    let url = `/feeding/goals?user_id=${userId}`
+    if (status) url += `&status=${status}`
+    return api.get(url)
+  },
+  addGoal: (data: any) =>
+    api.post('/feeding/goals', data),
+  updateGoal: (goalId: number, data: any) =>
+    api.put(`/feeding/goals/${goalId}`, data),
+  deleteGoal: (goalId: number) =>
+    api.delete(`/feeding/goals/${goalId}`),
+
+  getAdvices: (userId: number = 1, isCompleted?: boolean) => {
+    let url = `/feeding/advices?user_id=${userId}`
+    if (isCompleted !== undefined) url += `&is_completed=${isCompleted ? 1 : 0}`
+    return api.get(url)
+  },
+  addAdvice: (data: any) =>
+    api.post('/feeding/advices', data),
+  updateAdvice: (adviceId: number, data: any) =>
+    api.put(`/feeding/advices/${adviceId}`, data),
+  deleteAdvice: (adviceId: number) =>
+    api.delete(`/feeding/advices/${adviceId}`),
+}
+
 export default api

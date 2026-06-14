@@ -23,6 +23,7 @@ def create_app():
     from routes.user_routes import user_bp
     from routes.care_routes import care_bp
     from routes.care_med_routes import care_med_bp
+    from routes.feeding_routes import feeding_bp
 
     app.register_blueprint(emotion_bp, url_prefix='/api/emotion')
     app.register_blueprint(stress_bp, url_prefix='/api/stress')
@@ -33,6 +34,7 @@ def create_app():
     app.register_blueprint(user_bp, url_prefix='/api/user')
     app.register_blueprint(care_bp, url_prefix='/api/care')
     app.register_blueprint(care_med_bp, url_prefix='/api/care-med')
+    app.register_blueprint(feeding_bp, url_prefix='/api/feeding')
 
     with app.app_context():
         db.create_all()
@@ -94,6 +96,34 @@ def seed_data():
                 contact='400-161-9995',
                 type='hotline',
                 is_emergency=True
+            ),
+            CounselingResource(
+                title='全国妇幼健康热线',
+                description='提供母乳喂养咨询、妇幼健康指导等专业服务',
+                contact='12320',
+                type='hotline',
+                is_emergency=True
+            ),
+            CounselingResource(
+                title='中国妇幼保健协会',
+                description='专业母乳喂养指导和母婴健康服务',
+                contact='www.chinawch.org',
+                type='organization',
+                is_emergency=False
+            ),
+            CounselingResource(
+                title='国际母乳会(中国)',
+                description='非营利性母乳喂养支持组织，提供免费哺乳指导',
+                contact='www.llli.org/cn',
+                type='organization',
+                is_emergency=False
+            ),
+            CounselingResource(
+                title='母乳喂养APP推荐',
+                description='推荐：妈妈网孕育、宝宝树、亲宝宝等，记录喂养数据，获取专业指导',
+                contact='应用商店搜索"母乳喂养"',
+                type='app',
+                is_emergency=False
             ),
         ]
         db.session.add_all(resources)
