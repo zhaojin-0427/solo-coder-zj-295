@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { statsAPI, careAPI, careMedAPI, feedingAPI } from '../api'
+import { statsAPI, careAPI, careMedAPI, feedingAPI, rehabAPI } from '../api'
 import {
   StatsOverview,
   EmotionTrendItem,
@@ -8,6 +8,7 @@ import {
   CareStats,
   CareMedStats,
   FeedingStats,
+  RehabStats,
 } from '../types'
 import {
   LineChart,
@@ -80,6 +81,7 @@ function Statistics() {
   const [careStats, setCareStats] = useState<CareStats | null>(null)
   const [careMedStats, setCareMedStats] = useState<CareMedStats | null>(null)
   const [feedingStats, setFeedingStats] = useState<FeedingStats | null>(null)
+  const [rehabStats, setRehabStats] = useState<RehabStats | null>(null)
   const [period, setPeriod] = useState<'week' | 'month'>('week')
 
   useEffect(() => {
@@ -88,7 +90,7 @@ function Statistics() {
 
   const loadData = async () => {
     try {
-      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes, careMedRes, feedingRes] = await Promise.all([
+      const [overviewRes, trendRes, stressRes, supportRes, recoveryRes, careRes, careMedRes, feedingRes, rehabRes] = await Promise.all([
         statsAPI.getOverview(1, period),
         statsAPI.getEmotionTrend(1, period),
         statsAPI.getStressDistribution(1, period),
@@ -97,6 +99,7 @@ function Statistics() {
         careAPI.getStats(1, 7),
         careMedAPI.getStats(1, 30),
         feedingAPI.getStats(1, 30),
+        rehabAPI.getStats(1, 30),
       ])
 
       if (overviewRes.data.success) setOverview(overviewRes.data.data)
@@ -107,6 +110,7 @@ function Statistics() {
       if (careRes.data.success) setCareStats(careRes.data.data)
       if (careMedRes.data.success) setCareMedStats(careMedRes.data.data)
       if (feedingRes.data.success) setFeedingStats(feedingRes.data.data)
+      if (rehabRes.data.success) setRehabStats(rehabRes.data.data)
     } catch (e) {
       console.error('加载统计数据失败', e)
     }
@@ -972,6 +976,154 @@ function Statistics() {
           <div className="empty-state">
             <div className="empty-icon">🤱</div>
             <p>暂无喂养统计数据，去喂养护理页面记录吧</p>
+          </div>
+        )}
+      </div>
+
+      <div className="stats-section">
+        <h3 className="stats-title">🏃‍♀️ 产后康复训练统计</h3>
+        {rehabStats ? (
+          <>
+            <div className="stats-grid">
+              <div className="stats-card">
+                <div className="stats-card-label">训练完成率</div>
+                <div className="stats-card-value" style={{ color: '#f97316' }}>
+                  {rehabStats.overview.completion_rate.toFixed(1)}%
+                </div>
+                <div className="stats-card-sub">近30天</div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-card-label">总训练时长</div>
+                <div className="stats-card-value" style={{ color: '#8b5cf6' }}>
+                  {rehabStats.overview.total_duration_minutes}
+                  <span style={{ fontSize: '14px' }}> 分钟</span>
+                </div>
+                <div className="stats-card-sub">累计 {rehabStats.overview.total_training_count} 次训练</div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-card-label">目标达成率</div>
+                <div className="stats-card-value" style={{ color: '#10b981' }}>
+                  {rehabStats.goals.overall_rate.toFixed(1)}%
+                </div>
+                <div className="stats-card-sub">
+                  {rehabStats.goals.achieved}/{rehabStats.goals.total} 个目标
+                </div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-card-label">异常反馈</div>
+                <div className="stats-card-value" style={{ color: '#ef4444' }}>
+                  {rehabStats.daily_trend.reduce((sum: number, d: any) => sum + d.pain_count + d.leakage_count + d.dizziness_count, 0)}
+                  <span style={{ fontSize: '14px' }}> 次</span>
+                </div>
+                <div className="stats-card-sub">需关注身体信号</div>
+              </div>
+            </div>
+
+            <div className="chart-card">
+              <h4 className="chart-title">训练类型分布</h4>
+              {rehabStats.type_distribution && rehabStats.type_distribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={rehabStats.type_distribution}
+                      dataKey="count"
+                      nameKey="type_label"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ type_label, percentage }) => `${type_label} ${percentage.toFixed(0)}%`}
+                    >
+                      {rehabStats.type_distribution.map((entry: any, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={['#f97316', '#8b5cf6', '#10b981', '#3b82f6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1'][index % 8]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-state"><p>暂无训练类型数据</p></div>
+              )}
+            </div>
+
+            <div className="chart-card">
+              <h4 className="chart-title">近30天身体反馈趋势</h4>
+              {rehabStats.body_feedback_trend && rehabStats.body_feedback_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={rehabStats.body_feedback_trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_pain"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      dot={false}
+                      name="平均疼痛等级"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="leakage_count"
+                      stroke="#f97316"
+                      strokeWidth={2}
+                      dot={false}
+                      name="漏尿次数"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="dizziness_count"
+                      stroke="#8b5cf6"
+                      strokeWidth={2}
+                      dot={false}
+                      name="头晕次数"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-state"><p>暂无反馈趋势数据</p></div>
+              )}
+            </div>
+
+            <div className="chart-card">
+              <h4 className="chart-title">每日训练时长与完成情况</h4>
+              {rehabStats.daily_trend && rehabStats.daily_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={rehabStats.daily_trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="duration_minutes" name="训练时长(分)" fill="#f97316" radius={[4, 4, 0, 0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="completion_rate" name="完成率(%)" stroke="#10b981" strokeWidth={2} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-state"><p>暂无每日趋势数据</p></div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '16px', padding: '16px', background: '#fff7ed', borderRadius: '12px' }}>
+              <h4 style={{ fontSize: '14px', marginBottom: '8px', color: '#c2410c' }}>💡 产后康复小贴士</h4>
+              <ul style={{ fontSize: '13px', color: '#c2410c', lineHeight: 1.8, marginLeft: '18px' }}>
+                <li>产后6周内以轻柔的盆底肌训练和呼吸放松为主，避免剧烈运动</li>
+                <li>腹直肌分离修复需在专业指导下进行，先评估分离程度再选择训练方式</li>
+                <li>训练时如出现疼痛加重、漏尿增多、头晕乏力等情况请立即停止并休息</li>
+                <li>循序渐进、持之以恒是产后康复的关键，不要急于求成</li>
+                <li>建议定期复诊，根据医生评估调整康复计划 💕</li>
+              </ul>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">🏃‍♀️</div>
+            <p>暂无康复训练统计数据，去康复训练页面开始记录吧</p>
           </div>
         )}
       </div>

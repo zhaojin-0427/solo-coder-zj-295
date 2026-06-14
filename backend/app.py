@@ -24,6 +24,7 @@ def create_app():
     from routes.care_routes import care_bp
     from routes.care_med_routes import care_med_bp
     from routes.feeding_routes import feeding_bp
+    from routes.rehab_routes import rehab_bp
 
     app.register_blueprint(emotion_bp, url_prefix='/api/emotion')
     app.register_blueprint(stress_bp, url_prefix='/api/stress')
@@ -35,6 +36,7 @@ def create_app():
     app.register_blueprint(care_bp, url_prefix='/api/care')
     app.register_blueprint(care_med_bp, url_prefix='/api/care-med')
     app.register_blueprint(feeding_bp, url_prefix='/api/feeding')
+    app.register_blueprint(rehab_bp, url_prefix='/api/rehab')
 
     with app.app_context():
         db.create_all()

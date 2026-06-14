@@ -387,3 +387,179 @@ export interface FeedingStats {
   }
   goal_achievement: LactationGoal[]
 }
+
+export interface RehabTrainingType {
+  type: string
+  label: string
+  icon: string
+  default_duration: number
+  default_intensity: number
+  description: string
+}
+
+export interface RehabTrainingRecord {
+  id: number
+  training_type: string
+  training_type_label: string
+  record_date?: string
+  duration_minutes: number
+  intensity: number
+  intensity_label: string
+  completed: boolean
+  pain_level: number
+  pain_level_label: string
+  has_leakage: boolean
+  leakage_severity: number
+  has_dizziness: boolean
+  has_fatigue: boolean
+  other_symptoms: string
+  note: string
+  created_at: string
+  icon?: string
+}
+
+export interface RehabGoal {
+  id: number
+  goal_type: string
+  goal_type_label: string
+  target_value: number
+  current_value: number
+  unit: string
+  start_date: string | null
+  target_date: string | null
+  status: 'active' | 'completed' | 'paused'
+  description: string
+  completion_rate: number
+  achieved: boolean
+}
+
+export interface RehabContraindication {
+  id: number
+  content: string
+  source: string
+  source_label: string
+  source_name: string
+  is_active: boolean
+  note: string
+  created_at?: string
+}
+
+export interface RehabAlert {
+  id: number
+  alert_type: string
+  level: 'urgent' | 'warn' | 'info'
+  title: string
+  content: string
+  alert_date: string
+  is_acknowledged: boolean
+  resources: { title: string; contact: string; type: string }[]
+  support_contacts: { title: string; contact: string; type: string }[]
+}
+
+export interface RehabSuggestions {
+  intensity_suggestion: number
+  intensity_label: string
+  rest_reminders: string[]
+  risk_warnings: {
+    level: string
+    title: string
+    content: string
+  }[]
+  support_contacts: { title: string; contact: string; type: string }[]
+  training_recommendations: {
+    type: string
+    reason: string
+  }[]
+}
+
+export interface RehabTodayData {
+  date: string
+  records: RehabTrainingRecord[]
+  summary: {
+    total_count: number
+    completed_count: number
+    total_duration: number
+  }
+  suggestions: RehabSuggestions
+  alerts: RehabAlert[]
+  active_goals: RehabGoal[]
+  contraindications: RehabContraindication[]
+  need_urgent: boolean
+  training_types: RehabTrainingType[]
+}
+
+export interface RehabStats {
+  period_days: number
+  overview: {
+    total_training_count: number
+    completed_count: number
+    completion_rate: number
+    total_duration_minutes: number
+    avg_daily_duration: number
+    active_days: number
+    training_types_count: number
+  }
+  daily_trend: {
+    date: string
+    total_count: number
+    completed_count: number
+    completion_rate: number
+    duration_minutes: number
+    avg_pain: number
+    pain_count: number
+    leakage_count: number
+    dizziness_count: number
+    fatigue_count: number
+  }[]
+  type_distribution: {
+    type: string
+    type_label: string
+    icon: string
+    count: number
+    completed: number
+    total_duration: number
+    percentage: number
+  }[]
+  body_feedback_trend: {
+    date: string
+    pain_count: number
+    leakage_count: number
+    dizziness_count: number
+    fatigue_count: number
+    avg_pain: number
+  }[]
+  pain_distribution: {
+    level: number
+    level_label: string
+    count: number
+    percentage: number
+  }[]
+  goals: {
+    total: number
+    active: number
+    achieved: number
+    overall_rate: number
+    list: RehabGoal[]
+  }
+  emotion_sleep_correlation: {
+    avg_emotion_7d: number | null
+    avg_sleep_quality_7d: number | null
+    avg_sleep_hours_7d: number | null
+    low_emotion_days_7d: number
+    poor_sleep_days_7d: number
+    avg_training_duration_7d: number | null
+    avg_baby_sleep_7d: number | null
+    avg_feed_count_7d: number | null
+  }
+}
+
+export interface RehabHistoryItem {
+  date: string
+  records: RehabTrainingRecord[]
+  summary: {
+    total_count: number
+    completed_count: number
+    total_duration: number
+    has_abnormal: boolean
+  }
+}

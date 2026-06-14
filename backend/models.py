@@ -262,3 +262,69 @@ class FeedingAlert(db.Model):
     is_acknowledged = db.Column(db.Boolean, default=False)
     resources_pushed = db.Column(db.Text, default='')
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class RehabTrainingRecord(db.Model):
+    __tablename__ = 'rehab_training_records'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    record_date = db.Column(db.Date, default=date.today, nullable=False)
+    training_type = db.Column(db.String(50), nullable=False)
+    training_type_label = db.Column(db.String(50), default='')
+    duration_minutes = db.Column(db.Integer, default=0)
+    intensity = db.Column(db.Integer, default=3)
+    completed = db.Column(db.Boolean, default=True)
+    pain_level = db.Column(db.Integer, default=0)
+    has_leakage = db.Column(db.Boolean, default=False)
+    leakage_severity = db.Column(db.Integer, default=0)
+    has_dizziness = db.Column(db.Boolean, default=False)
+    has_fatigue = db.Column(db.Boolean, default=False)
+    other_symptoms = db.Column(db.Text, default='')
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class RehabGoal(db.Model):
+    __tablename__ = 'rehab_goals'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    goal_type = db.Column(db.String(50), nullable=False)
+    goal_type_label = db.Column(db.String(50), default='')
+    target_value = db.Column(db.Float, default=0)
+    current_value = db.Column(db.Float, default=0)
+    unit = db.Column(db.String(20), default='')
+    start_date = db.Column(db.Date, default=date.today)
+    target_date = db.Column(db.Date)
+    status = db.Column(db.String(20), default='active')
+    description = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class RehabContraindication(db.Model):
+    __tablename__ = 'rehab_contraindications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    source = db.Column(db.String(50), default='doctor')
+    source_name = db.Column(db.String(100), default='')
+    is_active = db.Column(db.Boolean, default=True)
+    note = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class RehabAlert(db.Model):
+    __tablename__ = 'rehab_alerts'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)
+    level = db.Column(db.String(20), default='info')
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    alert_date = db.Column(db.Date, default=date.today)
+    is_acknowledged = db.Column(db.Boolean, default=False)
+    resources_pushed = db.Column(db.Text, default='')
+    support_contacts = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.now)

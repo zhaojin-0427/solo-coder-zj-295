@@ -226,4 +226,54 @@ export const feedingAPI = {
     api.delete(`/feeding/advices/${adviceId}`),
 }
 
+export const rehabAPI = {
+  getToday: (userId: number = 1) =>
+    api.get(`/rehab/today?user_id=${userId}`),
+  getAlerts: (userId: number = 1) =>
+    api.get(`/rehab/alerts?user_id=${userId}`),
+  getStats: (userId: number = 1, days: number = 30) =>
+    api.get(`/rehab/stats?user_id=${userId}&days=${days}`),
+  getHistory: (userId: number = 1, days: number = 30) =>
+    api.get(`/rehab/history?user_id=${userId}&days=${days}`),
+
+  getRecords: (userId: number = 1, days: number = 30, trainingType?: string) => {
+    let url = `/rehab/records?user_id=${userId}&days=${days}`
+    if (trainingType) url += `&training_type=${trainingType}`
+    return api.get(url)
+  },
+  addRecord: (data: any) =>
+    api.post('/rehab/records', data),
+  updateRecord: (recordId: number, data: any) =>
+    api.put(`/rehab/records/${recordId}`, data),
+  deleteRecord: (recordId: number) =>
+    api.delete(`/rehab/records/${recordId}`),
+
+  getGoals: (userId: number = 1, status?: string) => {
+    let url = `/rehab/goals?user_id=${userId}`
+    if (status) url += `&status=${status}`
+    return api.get(url)
+  },
+  addGoal: (data: any) =>
+    api.post('/rehab/goals', data),
+  updateGoal: (goalId: number, data: any) =>
+    api.put(`/rehab/goals/${goalId}`, data),
+  deleteGoal: (goalId: number) =>
+    api.delete(`/rehab/goals/${goalId}`),
+
+  getContraindications: (userId: number = 1, activeOnly?: boolean) => {
+    let url = `/rehab/contraindications?user_id=${userId}`
+    if (activeOnly) url += `&active_only=1`
+    return api.get(url)
+  },
+  addContraindication: (data: any) =>
+    api.post('/rehab/contraindications', data),
+  updateContraindication: (itemId: number, data: any) =>
+    api.put(`/rehab/contraindications/${itemId}`, data),
+  deleteContraindication: (itemId: number) =>
+    api.delete(`/rehab/contraindications/${itemId}`),
+
+  acknowledgeAlert: (alertId: number) =>
+    api.post(`/rehab/alert/acknowledge/${alertId}`),
+}
+
 export default api
